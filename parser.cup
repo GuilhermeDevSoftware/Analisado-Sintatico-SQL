@@ -1,0 +1,170 @@
+package compilador.sintatico;
+
+import java_cup.runtime.*;
+
+parser code {:
+
+    Scanner s;
+
+    Parser(Scanner s) {
+        this.s = s;
+    }
+
+    public void report_error(String message, Object info) {
+
+        System.err.print("Erro sintático");
+
+        if (info instanceof Symbol) {
+
+            Symbol s = (Symbol) info;
+
+            if (s.left >= 0) {
+
+                System.err.print(
+                    " na linha " + (s.left + 1)
+                );
+
+                if (s.right >= 0) {
+
+                    System.err.print(
+                        ", coluna " + (s.right + 1)
+                    );
+                }
+            }
+        }
+
+        System.err.println();
+    }
+
+:}
+
+/* Integração com Scanner */
+init with {: :};
+
+scan with {: return s.next_token(); :};
+
+/* Tokens */
+terminal SELECT, FROM, WHERE;
+terminal EQ, SEMI, GE, STAR, LE, NE, GT, LT, COMMA;
+
+terminal String IDENT;
+terminal Integer NUMBER;
+
+/* Não-terminais */
+non terminal query, condition, value, lista_campos;
+
+/* Símbolo inicial */
+start with query;
+
+
+
+/* Gramática */
+query ::=
+        SELECT STAR FROM IDENT:t SEMI
+       {:
+            System.out.println(
+                "COMANDO SELECT * RECONHECIDO"
+            );
+
+            System.out.println(
+                "Tabela: " + t
+            );
+       :}
+
+        |
+
+       SELECT lista_campos FROM IDENT:t SEMI
+       {:
+            System.out.println(
+                "COMANDO SELECT RECONHECIDO"
+            );        
+
+            System.out.println(
+                "Tabela: " + t
+            );
+       :}
+
+       |
+
+       SELECT lista_campos FROM IDENT:t
+        WHERE condition SEMI
+       {:
+            System.out.println(
+                "COMANDO SELECT COM WHERE"
+            );          
+
+            System.out.println(
+                "Tabela: " + t
+            );
+       :}
+
+       |
+
+       SELECT STAR FROM IDENT:t
+       WHERE condition SEMI
+       {:
+            System.out.println(
+                "COMANDO SELECT * COM WHERE"
+            );
+
+            System.out.println(
+                "Tabela: " + t
+            );
+       :}
+       ;
+
+lista_campos ::=
+        IDENT:i
+        {:
+            System.out.println(
+                "Campo encontrado: " + i
+            );
+        :}
+
+        |
+
+        lista_campos COMMA IDENT:i
+        {:
+            System.out.println(
+                "Campo encontrado: " + i
+            );
+        :}
+        ;
+
+condition ::=
+          IDENT EQ value
+        {:
+            System.out.println("OPERADOR = RECONHECIDO");
+        :}
+
+        | IDENT GE value
+        {:
+            System.out.println("OPERADOR >= RECONHECIDO");
+        :}
+
+        | IDENT LE value
+        {:
+            System.out.println("OPERADOR <= RECONHECIDO");
+        :}
+
+        | IDENT GT value
+        {:
+            System.out.println("OPERADOR > RECONHECIDO");
+        :}
+
+        | IDENT LT value
+        {:
+            System.out.println("OPERADOR < RECONHECIDO");
+        :}
+
+        | IDENT NE value
+        {:
+            System.out.println("OPERADOR != RECONHECIDO");
+        :}
+        ;
+
+value ::= NUMBER
+       | IDENT
+       ;
+
+

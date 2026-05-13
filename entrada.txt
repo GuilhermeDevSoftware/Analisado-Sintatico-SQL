@@ -1,0 +1,2 @@
+SELECT name, codigo, nascimento FROM clientes WHERE idade>=18;
+
